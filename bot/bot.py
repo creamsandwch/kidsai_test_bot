@@ -7,7 +7,7 @@ from aiogram.types.message import ContentType
 from aiogram.utils import executor
 from aiogram.utils.markdown import bold, code, italic, text
 from config import TOKEN, URL, MEDIA_PATH
-from keyboards import voices_inline_kb
+from keyboards import voices_inline_kb, photos_inline_kb
 from utils import search_for_file_by_name
 
 bot = Bot(token=TOKEN)
@@ -40,9 +40,16 @@ async def process_help_command(message: types.Message):
         '/repo - ссылка на репозиторий с исходниками этого бота',
         sep='\n'
     )
-    await message.reply(
+    await bot.send_message(
+        chat_id=message.from_user.id,
         text=msg, parse_mode=ParseMode.MARKDOWN
     )
+
+
+@dp.message_handler(commands=['photos'])
+async def process_command_photos(message: types.Message):
+    """Shows inline keyboard with photo message options."""
+    await message.reply('Мои фото', reply_markup=photos_inline_kb)
 
 
 @dp.message_handler(commands=['voices'])

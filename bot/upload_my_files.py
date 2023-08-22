@@ -43,11 +43,17 @@ async def store_ids_for_my_files(folder, method, file_attr):
 
             try:
                 data = {'file_id': file_id, 'filename': filename}
-                obj_list = await search_for_file_by_name(url=URL, filename=filename)
+                obj_list = await search_for_file_by_name(
+                    url=URL, filename=filename
+                )
                 id = obj_list[0]
-                logging.info('Updating telegram id on file with db_id = {}'.format(id))
+                logging.info(
+                    'Updating telegram id on file with db_id = {}'.format(id)
+                )
                 if id:
-                    await update_media_id(data=data, url=URL, id=obj_list[0]['id'])
+                    await update_media_id(
+                        data=data, url=URL, id=obj_list[0]['id']
+                    )
                 else:
                     await create_media_id(data=data, url=URL)
             except Exception as exc:
