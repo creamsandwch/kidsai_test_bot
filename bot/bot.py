@@ -7,7 +7,7 @@ from aiogram.types.message import ContentType
 from aiogram.utils import executor
 from aiogram.utils.markdown import bold, code, italic, text
 from config import TOKEN, URL, MEDIA_PATH
-from keyboards import inline_kb
+from keyboards import voices_inline_kb
 from utils import search_for_file_by_name
 
 bot = Bot(token=TOKEN)
@@ -32,14 +32,23 @@ async def process_start_command(message: types.Message):
 
 @dp.message_handler(commands=['help'])
 async def process_help_command(message: types.Message):
-    msg = 'help_text'
+    msg = text(
+        bold('Команды:'),
+        '/photos - мои фото',
+        '/voices - мои голосовые с короткими рассказами',
+        '/about - про моё главное увлечение',
+        '/repo - ссылка на репозиторий с исходниками этого бота',
+        sep='\n'
+    )
     await message.reply(
-        text=msg,)
+        text=msg, parse_mode=ParseMode.MARKDOWN
+    )
 
 
 @dp.message_handler(commands=['voices'])
 async def process_command_voices(message: types.Message):
-    await message.reply('Голосовые сообщения', reply_markup=inline_kb)
+    """Shows inline keyboard with voice message options."""
+    await message.reply('Голосовые сообщения', reply_markup=voices_inline_kb)
 
 
 async def get_file_id(filename=None):
@@ -59,6 +68,10 @@ async def get_file_id(filename=None):
 async def process_callback_lovestory_button(
     callback_query: types.CallbackQuery
 ):
+    """
+    Catches keyboard buttons starting with voicebtn_ and
+    sends voices found in database by filename: {filename}.ogg
+    """
     command = callback_query.data
     filename = command.replace('voicebtn_', '') + '.ogg'
     file_id = await get_file_id(filename=filename)
@@ -78,6 +91,7 @@ async def process_callback_lovestory_button(
 
 @dp.message_handler(content_types=ContentType.ANY)
 async def unknown_message(msg: types.Message):
+    """Last resort if any other handlers didn't catch anything."""
     message_text = text('Я не знаю, что с этим делать.',
                         italic('\nЯ просто напомню,'), 'что есть',
                         code('команда'), '/help')

@@ -14,10 +14,10 @@ button_chatgpt_for_grandma = InlineKeyboardButton(
     callback_data='voicebtn_chatgpt'
 )
 
-inline_kb = InlineKeyboardMarkup(
+voices_inline_kb = InlineKeyboardMarkup(
     resize_keyboard=True, one_time_keyboard=True, row_width=1
 )
-inline_kb.add(
+voices_inline_kb.add(
     button_lovestory,
     button_chatgpt_for_grandma,
     button_sql_vs_nosql
