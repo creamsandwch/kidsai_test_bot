@@ -1,11 +1,16 @@
 import asyncio
 import logging
 import os
-from pathlib import Path
 
-import aiohttp
 from aiogram import Bot
 from dotenv import load_dotenv
+
+from config import MEDIA_PATH, MY_ID, URL
+from utils import (
+    create_media_id,
+    update_media_id,
+    search_for_file_by_name
+)
 
 logging.basicConfig(
     format=(
@@ -16,21 +21,16 @@ logging.basicConfig(
 )
 
 load_dotenv()
-MY_ID = os.getenv('MY_ID')
+
 bot = Bot(token=os.getenv('BOT_TOKEN'))
-
-MEDIA_PATH = Path(__file__).resolve().parent.parent / 'database' / 'media'
-
-URL = 'http://127.0.0.1:8000/api/v1/media_ids/'
-
-
-async def send_post_media_id(data, url):
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url=url, data=data) as response:
-            return response.status
 
 
 async def store_ids_for_my_files(folder, method, file_attr):
+    """
+    Telegram gives media files unique ids
+    in order to optimise its sending.
+    If filename exists in db, updates its telegram id.
+    """
     folder_path = MEDIA_PATH / folder
     logging.info(msg=f'current folder is {folder_path}')
     for filename in os.listdir(folder_path):
@@ -43,7 +43,13 @@ async def store_ids_for_my_files(folder, method, file_attr):
 
             try:
                 data = {'file_id': file_id, 'filename': filename}
-                await send_post_media_id(data, URL)
+                obj_list = await search_for_file_by_name(url=URL, filename=filename)
+                id = obj_list[0]
+                logging.info('Updating telegram id on file with db_id = {}'.format(id))
+                if id:
+                    await update_media_id(data=data, url=URL, id=obj_list[0]['id'])
+                else:
+                    await create_media_id(data=data, url=URL)
             except Exception as exc:
                 logging.error(
                     'File {} id was not saved: {}'.format(filename, exc)
@@ -63,7 +69,7 @@ tasks = [
         store_ids_for_my_files('photos', bot.send_photo, 'photo')
     ),
     loop.create_task(
-        store_ids_for_my_files('voice', bot.send_video, 'voice')
+        store_ids_for_my_files('voice', bot.send_voice, 'voice')
     ),
     loop.create_task(
         store_ids_for_my_files('audio', bot.send_audio, 'audio')

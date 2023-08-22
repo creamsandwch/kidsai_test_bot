@@ -1,8 +1,10 @@
-from aiogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
-                           KeyboardButton, ReplyKeyboardMarkup,
-                           ReplyKeyboardRemove)
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-button_hi = KeyboardButton('Привет!')
 
-greet_kb = ReplyKeyboardMarkup()
-greet_kb.add(button_hi)
+button_lovestory = InlineKeyboardButton(
+    'История первой любви',
+    callback_data='love_story'
+)
+
+inline_kb = InlineKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+inline_kb.add(button_lovestory)

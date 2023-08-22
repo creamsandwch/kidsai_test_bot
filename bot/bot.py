@@ -3,11 +3,11 @@ from aiogram.dispatcher import Dispatcher
 from aiogram.types import ParseMode
 from aiogram.types.message import ContentType
 from aiogram.utils import executor
-from aiogram.utils.emoji import emojize
+from emoji import emojize
 from aiogram.utils.markdown import bold, code, italic, text
-from config import TOKEN
-
-from database.media_app.models import MediaIds
+from config import TOKEN, URL
+from keyboards import inline_kb
+from utils import search_for_file_by_name
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot=bot)
@@ -16,20 +16,15 @@ dp = Dispatcher(bot=bot)
 @dp.message_handler(commands=['start'])
 async def process_start_command(message: types.Message):
     await message.reply(
-        'Привет!\nИспользуй /help, чтобы узнать список доступных команд'
+        'Привет!\nИспользуй /help, чтобы узнать список доступных команд',
     )
 
 
 @dp.message_handler(commands=['help'])
 async def process_help_command(message: types.Message):
     msg = text(
-        bold('Команды'),
-        '/voice',
-        '/photo',
-        '/group',
-        '/note',
-        '/file',
-        '/testpre',
+        bold('Команды: '),
+        '/about_me',
         sep='\n'
     )
     await message.reply(
@@ -37,13 +32,28 @@ async def process_help_command(message: types.Message):
     )
 
 
-@dp.message_handler(commands=['voice'])
-async def send_first_love_story(message: types.Message):
-    voice = await MediaIds.objects.aget(filename__icontains='first love story')
+@dp.message_handler(commands=['voices'])
+async def process_command_1(message: types.Message):
+    await message.reply('История первой любви', reply_markup=inline_kb)
+
+
+@dp.callback_query_handler(lambda c: c.data == 'love_story')
+async def process_callback_lovestory_button(
+    callback_query: types.CallbackQuery
+):
+    await bot.answer_callback_query(callback_query.id)
+    json_resp = await search_for_file_by_name(url=URL, filename='love_story.ogg')
+    if json_resp:
+        telegram_id = json_resp[0].get('file_id')
+    else:
+        await bot.send_message(
+            callback_query.from_user.id,
+            text='Файл не был найден на сервере',
+        )
     await bot.send_voice(
-        message.from_user.id,
-        voice=voice,
-        caption='my first love story'
+        callback_query.from_user.id,
+        voice=telegram_id,
+        caption='История первой любви'
     )
 
 
