@@ -1,16 +1,26 @@
+import logging
+
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.types import ParseMode
 from aiogram.types.message import ContentType
 from aiogram.utils import executor
-from emoji import emojize
 from aiogram.utils.markdown import bold, code, italic, text
-from config import TOKEN, URL
+from config import TOKEN, URL, MEDIA_PATH
 from keyboards import inline_kb
 from utils import search_for_file_by_name
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot=bot)
+
+
+logging.basicConfig(
+    format=(
+        '%(filename)s [ LINE:%(lineno)+3s ]#%(levelname)+8s'
+        ' [%(asctime)s]  %(message)s'
+    ),
+    level=logging.INFO
+)
 
 
 @dp.message_handler(commands=['start'])
@@ -22,44 +32,53 @@ async def process_start_command(message: types.Message):
 
 @dp.message_handler(commands=['help'])
 async def process_help_command(message: types.Message):
-    msg = text(
-        bold('Команды: '),
-        '/about_me',
-        sep='\n'
-    )
+    msg = 'help_text'
     await message.reply(
-        msg, parse_mode=ParseMode.MARKDOWN
-    )
+        text=msg,)
 
 
 @dp.message_handler(commands=['voices'])
-async def process_command_1(message: types.Message):
-    await message.reply('История первой любви', reply_markup=inline_kb)
+async def process_command_voices(message: types.Message):
+    await message.reply('Голосовые сообщения', reply_markup=inline_kb)
 
 
-@dp.callback_query_handler(lambda c: c.data == 'love_story')
+async def get_file_id(filename=None):
+    """
+    Searches for filename on GET to media_ids/.
+    Basically - in django media/ folder.
+    """
+    logging.info('searching for {} in {}'.format(filename, MEDIA_PATH))
+    json_resp = await search_for_file_by_name(url=URL, filename=filename)
+    if not json_resp:
+        return None
+    else:
+        return json_resp[0].get('file_id')
+
+
+@dp.callback_query_handler(lambda c: c.data.startswith('voicebtn'))
 async def process_callback_lovestory_button(
     callback_query: types.CallbackQuery
 ):
-    await bot.answer_callback_query(callback_query.id)
-    json_resp = await search_for_file_by_name(url=URL, filename='love_story.ogg')
-    if json_resp:
-        telegram_id = json_resp[0].get('file_id')
-    else:
+    command = callback_query.data
+    filename = command.replace('voicebtn_', '') + '.ogg'
+    file_id = await get_file_id(filename=filename)
+    if not file_id:
+        await bot.answer_callback_query(callback_query.id)
         await bot.send_message(
             callback_query.from_user.id,
-            text='Файл не был найден на сервере',
+            text=f'Файл {filename} не был найден в media/voice/'
         )
-    await bot.send_voice(
-        callback_query.from_user.id,
-        voice=telegram_id,
-        caption='История первой любви'
-    )
+    else:
+        await bot.answer_callback_query(callback_query.id)
+        await bot.send_voice(
+            callback_query.from_user.id,
+            voice=file_id,
+        )
 
 
 @dp.message_handler(content_types=ContentType.ANY)
 async def unknown_message(msg: types.Message):
-    message_text = text(emojize('Я не знаю, что с этим делать :astonished:'),
+    message_text = text('Я не знаю, что с этим делать.',
                         italic('\nЯ просто напомню,'), 'что есть',
                         code('команда'), '/help')
     await msg.reply(message_text, parse_mode=ParseMode.MARKDOWN)
