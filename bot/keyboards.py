@@ -11,7 +11,7 @@ button_sql_vs_nosql = InlineKeyboardButton(
     callback_data='voicebtn_sql_vs_nosql'
 )
 button_chatgpt_for_grandma = InlineKeyboardButton(
-    'ChatGPT для бабушки',
+    'GPT для бабушки',
     callback_data='voicebtn_chatgpt'
 )
 voices_inline_kb = InlineKeyboardMarkup(

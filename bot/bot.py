@@ -1,14 +1,20 @@
+import os
 import logging
-
+import requests
+import soundfile
+from pathlib import Path
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.types import ParseMode
 from aiogram.types.message import ContentType
 from aiogram.utils import executor
 from aiogram.utils.markdown import bold, code, italic, text
-from config import TOKEN, URL, MEDIA_PATH, ABOUT_POST, REPO_URL
+from speech_recognition.exceptions import UnknownValueError
+from config import TOKEN, URL, MEDIA_PATH, ABOUT_POST, REPO_URL, \
+    VOICE_KEYWORDS
 from keyboards import voices_inline_kb, photos_inline_kb
 from utils import search_for_file_by_name
+from stt import audio_to_text
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot=bot)
@@ -84,6 +90,13 @@ async def process_callback_voices_buttons(
     command = callback_query.data
     filename = command.replace('voicebtn_', '') + '.ogg'
     file_id = await get_file_id(filename=filename)
+    caption = ''
+    if 'love' in filename:
+        caption = 'История первой любви'
+    elif 'gpt' in filename:
+        caption = 'GPT для бабушки'
+    elif 'sql' in filename:
+        caption = 'Разница между SQL и NoSQL'
     if not file_id:
         await bot.answer_callback_query(callback_query.id)
         await bot.send_message(
@@ -95,6 +108,7 @@ async def process_callback_voices_buttons(
         await bot.send_voice(
             callback_query.from_user.id,
             voice=file_id,
+            caption=caption
         )
 
 
@@ -148,6 +162,80 @@ async def process_command_repo(message: types.Message):
             sep='\n',
         ), parse_mode=ParseMode.MARKDOWN_V2
     )
+
+
+@dp.message_handler(content_types=ContentType.VOICE)
+async def process_voice_message(message: types.Message):
+    """
+    Processes voice messages, searches for keywords in
+    translated text.
+    """
+    try:
+        if message.content_type == ContentType.VOICE:
+            file_id = message.voice.file_id
+        else:
+            await message.reply('Формат данных не поддерживается.')
+
+        file_info = await bot.get_file(file_id)
+        path = file_info.file_path
+
+        file_name = os.path.basename(path).split('.')[0]
+        logging.info('Started recognition of a file: {}'.format(file_name))
+
+        doc = requests.get(
+            'https://api.telegram.org/file/bot{0}/{1}'.format(
+                TOKEN, file_info.file_path
+            ),
+            timeout=10
+        )
+        with open(file_name + '.oga', 'wb') as f:
+            f.write(doc.content)
+
+        data, samplerate = soundfile.read(f'{file_name}' + '.oga')
+        soundfile.write(f'{file_name}.wav', data, samplerate)
+
+        result = audio_to_text(file_name + '.wav')
+
+        await message.reply(f'Ваше голосовое: {result}')
+
+        recognized = False
+        for command, keywords in VOICE_KEYWORDS.items():
+            for keyword in keywords:
+                if keyword in result:
+                    recognized = True
+                    await bot.send_message(
+                        message.from_user.id,
+                        text=f'Вы имели в виду команду /{command} ?',
+                    )
+                    break
+        if not recognized:
+            await bot.send_message(
+                message.from_user.id,
+                text=(
+                    'Мы проанализировали ваше голосове,'
+                    ' но не нашли подходящей команды.'
+                    ' Попробуйте переформуливать.'
+                )
+            )
+
+    except UnknownValueError as exc:
+        await message.reply(
+            'Голосовое сообщение {} неразборчивое или пустое: {}'.format(
+                message.message_id, exc
+            )
+        )
+        logging.info(
+            'Голосовое сообщение {} не было распознано: {}'.format(
+                message.message_id, exc
+            )
+        )
+    except Exception as exc:
+        await message.reply('Ошибка при распознавании, попробуйте позже.')
+        logging.warn(
+            'Ошибка при распознавании голосового {}: {}.'.format(message.message_id, exc))
+    finally:
+        os.remove(file_name + '.oga')
+        os.remove(file_name + '.wav')
 
 
 @dp.message_handler(content_types=ContentType.ANY)
