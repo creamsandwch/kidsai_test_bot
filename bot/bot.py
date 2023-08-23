@@ -6,7 +6,7 @@ from aiogram.types import ParseMode
 from aiogram.types.message import ContentType
 from aiogram.utils import executor
 from aiogram.utils.markdown import bold, code, italic, text
-from config import TOKEN, URL, MEDIA_PATH, ABOUT_POST
+from config import TOKEN, URL, MEDIA_PATH, ABOUT_POST, REPO_URL
 from keyboards import voices_inline_kb, photos_inline_kb
 from utils import search_for_file_by_name
 
@@ -134,6 +134,19 @@ async def process_command_about(message: types.Message):
     await bot.send_message(
         message.from_user.id,
         text=text(*ABOUT_POST, sep=' ')
+    )
+
+
+@dp.message_handler(commands=['repo'])
+async def process_command_repo(message: types.Message):
+    """Sends a message with url to repo with source code of this bot."""
+    await bot.send_message(
+        message.from_user.id,
+        text=text(
+            bold('Ссылка на репозиторий:'),
+            code(REPO_URL),
+            sep='\n',
+        ), parse_mode=ParseMode.MARKDOWN_V2
     )
 
 
