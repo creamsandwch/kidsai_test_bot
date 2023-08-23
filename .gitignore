@@ -10,3 +10,4 @@ vscode
 
 # database
 *.sqlite3
+*/.sqlite3
