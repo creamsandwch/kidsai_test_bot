@@ -30,6 +30,8 @@ async def store_ids_for_my_files(folder, method, file_attr):
     Telegram gives media files unique ids
     in order to optimise its sending.
     If filename exists in db, updates its telegram id.
+    If file id was successfully created or updated, sends its id
+    and content to bot creator chat.
     """
     folder_path = MEDIA_PATH / folder
     logging.info(msg=f'current folder is {folder_path}')
@@ -40,7 +42,6 @@ async def store_ids_for_my_files(folder, method, file_attr):
                 file_id = msg.photo[-1].file_id
             else:
                 file_id = getattr(msg, file_attr).file_id
-
             try:
                 data = {'file_id': file_id, 'filename': filename}
                 obj_list = await search_for_file_by_name(
@@ -60,12 +61,22 @@ async def store_ids_for_my_files(folder, method, file_attr):
                 logging.error(
                     'File {} id was not saved: {}'.format(filename, exc)
                 )
+                await bot.send_message(
+                    MY_ID,
+                    str(f'File {filename} was not saved: {exc}'),
+                    disable_notification=True
+                )
             else:
                 logging.info(
                     (
                         'File {} with id {}'.format(filename, file_id),
                         ' successfully saved to database'
                     )
+                )
+                await bot.send_message(
+                    MY_ID,
+                    str(f'File {filename}: {file_id} was successfully saved.'),
+                    disable_notification=True
                 )
 
 loop = asyncio.get_event_loop()

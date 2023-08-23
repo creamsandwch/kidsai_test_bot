@@ -128,6 +128,14 @@ async def process_callback_photos_button(
         )
 
 
+@dp.message_handler(commands=['about'])
+async def process_command_about(message: types.Message):
+    """Sends small text post."""
+    await bot.send_message(
+        message.from_user.id,
+    )
+
+
 @dp.message_handler(content_types=ContentType.ANY)
 async def unknown_message(msg: types.Message):
     """Last resort if any other handlers didn't catch anything."""
