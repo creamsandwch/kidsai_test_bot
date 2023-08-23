@@ -211,7 +211,7 @@ async def process_voice_message(message: types.Message):
             await bot.send_message(
                 message.from_user.id,
                 text=(
-                    'Мы проанализировали ваше голосове,'
+                    'Мы проанализировали ваше голосовое,'
                     ' но не нашли подходящей команды.'
                     ' Попробуйте переформуливать.'
                 )
