@@ -1,4 +1,5 @@
 import logging
+import os
 
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
@@ -6,9 +7,11 @@ from aiogram.types import ParseMode
 from aiogram.types.message import ContentType
 from aiogram.utils import executor
 from aiogram.utils.markdown import bold, code, italic, text
-from config import TOKEN, URL, MEDIA_PATH, ABOUT_POST, REPO_URL
+from config import TOKEN, URL, MEDIA_PATH, ABOUT_POST, REPO_URL, \
+    BOT_DIR
 from keyboards import voices_inline_kb, photos_inline_kb
 from utils import search_for_file_by_name
+from stt import voice_to_text
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot=bot)
@@ -150,6 +153,38 @@ async def process_command_repo(message: types.Message):
     )
 
 
+@dp.message_handler(
+    content_types=types.ContentType.VOICE
+)
+async def voice_message_handler(message: types.Message):
+    """
+    Handler for voice messages. Chooses which command
+    to start depending on keywords contained by voice message.
+    """
+    if message.content_type == ContentType.VOICE:
+        file_id = message.voice.file_id
+    else:
+        await message.reply('Формат данных не поддерживается.')
+
+    file = await bot.get_file(file_id)
+    file_path = file.file_path
+    file_on_disk = BOT_DIR / 'tmp' / file_id
+    await bot.download_file(file_path, file_on_disk)
+    await message.reply('Голосовое сообщение получено.')
+    translated_text = voice_to_text(file_on_disk)
+
+    for f in os.listdir(BOT_DIR / 'tmp'):
+        if file_id in f:
+            os.remove(BOT_DIR / 'tmp' / f)
+
+    await bot.send_message(
+        message.from_user.id,
+        text=translated_text
+    )
+
+
+
+
 @dp.message_handler(content_types=ContentType.ANY)
 async def unknown_message(msg: types.Message):
     """Last resort if any other handlers didn't catch anything."""
@@ -157,6 +192,8 @@ async def unknown_message(msg: types.Message):
                         italic('\nЯ просто напомню,'), 'что есть',
                         code('команда'), '/help')
     await msg.reply(message_text, parse_mode=ParseMode.MARKDOWN)
+
+
 
 
 if __name__ == '__main__':

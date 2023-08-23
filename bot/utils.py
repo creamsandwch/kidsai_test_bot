@@ -1,6 +1,5 @@
 import aiohttp
 
-
 async def create_media_id(data, url):
     """
     POST request to api media url to create new
@@ -30,3 +29,4 @@ async def search_for_file_by_name(url, filename):
         ) as response:
             resp_json = await response.json()
             return resp_json
+
