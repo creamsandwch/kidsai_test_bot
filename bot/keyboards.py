@@ -1,6 +1,5 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-
 # voice messages keyboard (on command /voices)
 button_lovestory = InlineKeyboardButton(
     'Первая любовь',

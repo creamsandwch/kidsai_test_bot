@@ -1,20 +1,19 @@
-import os
 import logging
+import os
+
 import requests
 import soundfile
-from pathlib import Path
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.types import ParseMode
 from aiogram.types.message import ContentType
 from aiogram.utils import executor
 from aiogram.utils.markdown import bold, code, italic, text
+from config import ABOUT_POST, MEDIA_PATH, REPO_URL, TOKEN, URL, VOICE_KEYWORDS
+from keyboards import photos_inline_kb, voices_inline_kb
 from speech_recognition.exceptions import UnknownValueError
-from config import TOKEN, URL, MEDIA_PATH, ABOUT_POST, REPO_URL, \
-    VOICE_KEYWORDS
-from keyboards import voices_inline_kb, photos_inline_kb
-from utils import search_for_file_by_name
 from stt import audio_to_text
+from utils import search_for_file_by_name
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot=bot)

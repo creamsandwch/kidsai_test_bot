@@ -3,14 +3,9 @@ import logging
 import os
 
 from aiogram import Bot
-from dotenv import load_dotenv
-
 from config import MEDIA_PATH, MY_ID, URL
-from utils import (
-    create_media_id,
-    update_media_id,
-    search_for_file_by_name
-)
+from dotenv import load_dotenv
+from utils import create_media_id, search_for_file_by_name, update_media_id
 
 logging.basicConfig(
     format=(
