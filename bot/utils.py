@@ -13,7 +13,7 @@ async def create_media_id(data, url):
 
 async def update_media_id(data, url, id):
     """
-    PUT request to api media url to
+    PATCH request to api media url to
     rewrite existing file id with new one.
     """
     url += f'{id}/'

@@ -46,11 +46,11 @@ async def store_ids_for_my_files(folder, method, file_attr):
                 obj_list = await search_for_file_by_name(
                     url=URL, filename=filename
                 )
-                id = obj_list[0]
-                logging.info(
-                    'Updating telegram id on file with db_id = {}'.format(id)
-                )
-                if id:
+                if len(obj_list) == 1:
+                    id = obj_list[0]
+                    logging.info(
+                        'Updating telegram id on file with db_id = {}'.format(id)
+                    )
                     await update_media_id(
                         data=data, url=URL, id=obj_list[0]['id']
                     )
@@ -72,7 +72,7 @@ loop = asyncio.get_event_loop()
 
 tasks = [
     loop.create_task(
-        store_ids_for_my_files('photos', bot.send_photo, 'photo')
+        store_ids_for_my_files('photo', bot.send_photo, 'photo')
     ),
     loop.create_task(
         store_ids_for_my_files('voice', bot.send_voice, 'voice')

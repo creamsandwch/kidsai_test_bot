@@ -26,11 +26,11 @@ voices_inline_kb.add(
 # photo messages keyboard (on command /photos)
 button_last_selfie = InlineKeyboardButton(
     'Последнее селфи',
-    callback_data='photo_last_selfie',
+    callback_data='photobtn_last_selfie',
 )
 button_highschool_photo = InlineKeyboardButton(
     'Фото из старшей школы',
-    callback_data='photo_highschool_photo'
+    callback_data='photobtn_highschool_photo'
 )
 photos_inline_kb = InlineKeyboardMarkup(
     resize_keyboard=True, one_time_keyboard=True, row_width=1

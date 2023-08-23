@@ -25,6 +25,7 @@ logging.basicConfig(
 
 @dp.message_handler(commands=['start'])
 async def process_start_command(message: types.Message):
+    """Text message on start command."""
     await message.reply(
         'Привет!\nИспользуй /help, чтобы узнать список доступных команд',
     )
@@ -32,6 +33,7 @@ async def process_start_command(message: types.Message):
 
 @dp.message_handler(commands=['help'])
 async def process_help_command(message: types.Message):
+    """Text message containing all available text commands."""
     msg = text(
         bold('Команды:'),
         '/photos - мои фото',
@@ -72,7 +74,7 @@ async def get_file_id(filename=None):
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('voicebtn'))
-async def process_callback_lovestory_button(
+async def process_callback_voices_buttons(
     callback_query: types.CallbackQuery
 ):
     """
@@ -93,6 +95,36 @@ async def process_callback_lovestory_button(
         await bot.send_voice(
             callback_query.from_user.id,
             voice=file_id,
+        )
+
+
+@dp.callback_query_handler(lambda c: c.data.startswith('photobtn'))
+async def process_callback_photos_button(
+    callback_query: types.CallbackQuery
+):
+    """
+    Catches keyboard buttons starting with photobtn
+    and sends photos found in database by filename: {filename.jpg}.
+    """
+    filename = callback_query.data.replace('photobtn_', '') + '.jpg'
+    file_id = await get_file_id(filename=filename)
+    if not file_id:
+        await bot.answer_callback_query(callback_query.id)
+        await bot.send_message(
+            callback_query.from_user.id,
+            text=f'Файл {filename} не был найден в media/photo/'
+        )
+    else:
+        await bot.answer_callback_query(callback_query.id)
+        caption = ''
+        if 'highschool' in filename:
+            caption = 'Не совсем старшая школа, но по-моему хорошее'
+        elif 'last_selfie' in filename:
+            caption = 'Последнее селфи'
+        await bot.send_photo(
+            callback_query.from_user.id,
+            photo=file_id,
+            caption=caption
         )
 
 
