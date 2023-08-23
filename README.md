@@ -41,4 +41,3 @@ python manage.py runserver
 # in bot/ dir:
 python bot.py
 ```
-And you are done.
