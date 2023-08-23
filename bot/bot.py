@@ -90,6 +90,13 @@ async def process_callback_voices_buttons(
     command = callback_query.data
     filename = command.replace('voicebtn_', '') + '.ogg'
     file_id = await get_file_id(filename=filename)
+    caption = ''
+    if 'love' in filename:
+        caption = 'История первой любви'
+    elif 'gpt' in filename:
+        caption = 'GPT для бабушки'
+    elif 'sql' in filename:
+        caption = 'Разница между SQL и NoSQL'
     if not file_id:
         await bot.answer_callback_query(callback_query.id)
         await bot.send_message(
@@ -101,6 +108,7 @@ async def process_callback_voices_buttons(
         await bot.send_voice(
             callback_query.from_user.id,
             voice=file_id,
+            caption=caption
         )
 
 
@@ -206,6 +214,7 @@ async def process_voice_message(message: types.Message):
                 text=(
                     'Мы проанализировали ваше голосове,'
                     ' но не нашли подходящей команды.'
+                    ' Попробуйте переформуливать.'
                 )
             )
 
