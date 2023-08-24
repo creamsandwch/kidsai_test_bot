@@ -16,3 +16,7 @@ vscode
 __pycache__/
 *.py[cod]
 *$py.class
+
+# archives
+*.zip
+.zip
